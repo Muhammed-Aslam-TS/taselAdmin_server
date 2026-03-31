@@ -9,9 +9,9 @@ const adminRoutes = Router();
 
 
 // Public routes (no auth required)
-// adminRoutes.post("/", createAdmin);
-adminRoutes.post("/outhenticate/login", adminLogin);
-adminRoutes.post("/adminRegister", createAdmin);
+adminRoutes.post("/login", adminLogin);
+adminRoutes.post("/register", createAdmin);
+adminRoutes.post("/adminRegister", createAdmin); // Legacy support
 
 // Protected admin routes
 adminRoutes.use(verifyAccessToken);

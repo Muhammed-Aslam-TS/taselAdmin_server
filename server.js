@@ -68,11 +68,14 @@ app.use("/api/notifications", notificationRouter);
 // --- Core Admin & Auth ---
 app.use("/api/admin", adminRoutes);
 
-// Universal Auth Endpoints (for Admin Login)
+// ========== CORE AUTH ENDPOINTS ==========
+// Standardized login endpoints for the admin panel
 app.post("/api/authenticate/login", adminLogin);
-app.post("/api/authenticate/logIn", adminLogin);
-app.post("/api/outhenticate/login", adminLogin);
-app.post("/api/outhenticate/logIn", adminLogin);
+app.post("/api/admin/login", adminLogin); // Standardized alias
+
+// Registration endpoint
+app.post("/api/admin/register", createAdmin);
+app.post("/api/admin/adminRegister", createAdmin); // Legacy support
 
 
 import { seedSubscriptionPlans } from "./model/subscriptionPlans.js";
@@ -84,13 +87,24 @@ connectDB().then(async () => {
   await seedSubscriptionPlans();
   
   const server = app.listen(PORT, () => {
+    const healthUrl = `http://localhost:${PORT}/api/admin/profile`;
+    console.log(`\n-----------------------------------------------------------`);
     console.log(`🚀 Dedicated Admin Server running on port ${PORT}`);
-    console.log(`🔗 Health Check: http://localhost:${PORT}/api/admin/profile`);
+    console.log(`🔗 Admin API Health Check: ${healthUrl}`);
+    
+    // Log static serving status
+    const distAdminPath = path.join(__dirname, "dist");
+    if (fs.existsSync(distAdminPath)) {
+      console.log(`📂 Admin Dashboard: Serving from /admin -> ${distAdminPath}`);
+    } else {
+      console.warn(`⚠️ Warning: 'dist' folder not found. Frontend will not be served via /admin.`);
+    }
+    console.log(`-----------------------------------------------------------\n`);
   });
 
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      console.error(`\u274c Port ${PORT} is already in use. Please check for other running processes or change the ADMIN_PORT in .env.`);
+      console.error(`❌ Port ${PORT} is already in use. Please check for other running processes.`);
     } else {
       console.error("🚀 Server error:", err);
     }
@@ -101,7 +115,9 @@ connectDB().then(async () => {
   process.exit(1);
 });
 
-// ========== API 404 HANDLER ==========
+// ========== ROUTING & STATIC FILES ==========
+
+// 1. API 404 Handler (Catch-all for missing API endpoints)
 app.all("/api/*", (req, res) => {
   res.status(404).json({
     success: false,
@@ -109,11 +125,19 @@ app.all("/api/*", (req, res) => {
   });
 });
 
-// Serve frontend if it's placed in this project
+// 2. Serve Frontend (Admin Dashboard)
+// This must be placed AFTER API routes to avoid conflicts
 const distAdminPath = path.join(__dirname, "dist");
-if (fs.existsSync(distAdminPath) && fs.existsSync(path.join(distAdminPath, 'index.html'))) {
-  app.use("/admin", express.static(distAdminPath));
-  app.get(['/admin', '/admin/*'], (req, res) => {
-    res.sendFile(path.join(distAdminPath, 'index.html'));
-  });
-}
+
+// Serve static assets
+app.use("/admin", express.static(distAdminPath));
+
+// SPA Fallback: Send index.html for any /admin/* route that doesn't match a file
+app.get(["/admin", "/admin/*"], (req, res) => {
+  const indexPath = path.join(distAdminPath, "index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send("Admin Frontend not found. Please run build or copy build artifacts to 'dist' folder.");
+  }
+});
