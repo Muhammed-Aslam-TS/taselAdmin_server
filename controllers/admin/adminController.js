@@ -122,7 +122,13 @@ export const adminLogin = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Login successful",
-      data: {
+      token, // Flattened for frontend
+      user: {
+        id: admin._id,
+        email: admin.email,
+        role: admin.role,
+      },
+      data: { // Kept for legacy support
         id: admin._id,
         email: admin.email,
         role: admin.role,
