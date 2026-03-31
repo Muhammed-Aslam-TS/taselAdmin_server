@@ -16,7 +16,7 @@ import ownersRoutes from "./routes/admin/ownersRoutes.js";
 import subscriptionRouter from "./routes/admin/subscriptionRouter.js";
 import orderRouter from "./routes/admin/orderRouter.js";
 import notificationRouter from "./routes/admin/notificationRouter.js";
-import { adminLogin } from "./controllers/admin/adminController.js";
+import { adminLogin, createAdmin } from "./controllers/admin/adminController.js";
 
 const app = express();
 const PORT = process.env.ADMIN_PORT || 4000;
