@@ -19,7 +19,7 @@ import notificationRouter from "./routes/admin/notificationRouter.js";
 import { adminLogin, createAdmin } from "./controllers/admin/adminController.js";
 
 const app = express();
-const PORT = process.env.ADMIN_PORT || 4000;
+const PORT = process.env.ADMIN_PORT || 5001;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -129,15 +129,19 @@ app.all("/api/*", (req, res) => {
 // This must be placed AFTER API routes to avoid conflicts
 const distAdminPath = path.join(__dirname, "dist");
 
-// Serve static assets
+// Serve static assets from root and /admin
+app.use("/", express.static(distAdminPath));
 app.use("/admin", express.static(distAdminPath));
 
-// SPA Fallback: Send index.html for any /admin/* route that doesn't match a file
-app.get(["/admin", "/admin/*"], (req, res) => {
+// SPA Fallback: Send index.html for all non-API routes to allow frontend routing
+app.get(["/", "/admin", "/admin/*", "/*"], (req, res, next) => {
+  // Prevent catching /api routes here (handled by API 404 above)
+  if (req.path.startsWith('/api')) return next();
+  
   const indexPath = path.join(distAdminPath, "index.html");
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(404).send("Admin Frontend not found. Please run build or copy build artifacts to 'dist' folder.");
+    res.status(404).send("Admin Frontend not found. Please ensure 'dist' folder exists.");
   }
 });
