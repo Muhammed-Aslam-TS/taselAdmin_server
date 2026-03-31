@@ -69,13 +69,14 @@ app.use("/api/notifications", notificationRouter);
 app.use("/api/admin", adminRoutes);
 
 // ========== CORE AUTH ENDPOINTS ==========
-// Standardized login endpoints for the admin panel
-app.post("/api/authenticate/login", adminLogin);
-app.post("/api/admin/login", adminLogin); // Standardized alias
+// These handles both correct spelling and common typo/casing variations from the frontend
+app.post(["/api/authenticate/login", "/api/authenticate/logIn", "/api/outhenticate/login", "/api/outhenticate/logIn"], adminLogin);
 
-// Registration endpoint
+// Standardized admin aliases
+app.post("/api/admin/login", adminLogin);
 app.post("/api/admin/register", createAdmin);
-app.post("/api/admin/adminRegister", createAdmin); // Legacy support
+app.post("/api/admin/adminRegister", createAdmin);
+ // Legacy support
 
 
 import { seedSubscriptionPlans } from "./model/subscriptionPlans.js";
