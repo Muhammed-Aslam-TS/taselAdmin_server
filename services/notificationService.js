@@ -10,7 +10,22 @@ const twilioWhatsappFrom = process.env.TWILIO_WHATSAPP_FROM || ""; // E.g., what
 
 let twilioClient = null;
 if (twilioAccountSid && twilioAuthToken) {
-  twilioClient = twilio(twilioAccountSid, twilioAuthToken);
+  // Check if the values are placeholders or invalid
+  const isPlaceholder = twilioAccountSid.includes("your_twilio_account_sid") || !twilioAccountSid.startsWith("AC");
+  
+  if (isPlaceholder) {
+    console.warn("[NotificationService] Twilio is not configured: TWILIO_ACCOUNT_SID is a placeholder or invalid. SMS/WhatsApp features will be disabled.");
+  } else {
+    try {
+      twilioClient = twilio(twilioAccountSid, twilioAuthToken);
+      console.log("[NotificationService] Twilio client initialized successfully.");
+    } catch (err) {
+      console.error("[NotificationService] Failed to initialize Twilio client:", err.message);
+      twilioClient = null;
+    }
+  }
+} else {
+  console.warn("[NotificationService] Twilio credentials missing in .env. SMS/WhatsApp features will be disabled.");
 }
 
 
